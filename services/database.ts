@@ -23,6 +23,7 @@ const FIREBASE_CONFIG = {
 };
 
 // --- 2. SUPABASE (SQL) CONFIG ---
+// Provided credentials
 const SUPABASE_URL: string = "https://gitbzgkhyhvzdpcekuqg.supabase.co"; 
 const SUPABASE_KEY: string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdpdGJ6Z2toeWh2emRwY2VrdXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMDA2MTgsImV4cCI6MjA4MTY3NjYxOH0.uiweUiYZxBN2d-LQpUB58uNfnjir6LfKluxcFC3i7SA"; 
 
@@ -74,7 +75,6 @@ const ensureStructure = (incoming: any): DBStructure => {
     if (!incoming || typeof incoming !== 'object') return defaults;
 
     // Merge incoming data over defaults
-    // Note: Spread is shallow. If incoming.state is missing, we must set it.
     const result = { ...defaults, ...incoming };
 
     // Critical Object Checks
@@ -162,7 +162,7 @@ class SupabaseAdapter implements DatabaseAdapter {
 
     constructor() {
         if (USE_SUPABASE) {
-             if (SUPABASE_URL === "YOUR_SUPABASE_URL") {
+             if (SUPABASE_URL.includes("YOUR_SUPABASE_URL")) {
                  console.warn("Supabase Config missing. Using Local Mode.");
                  return;
              }
@@ -181,10 +181,14 @@ class SupabaseAdapter implements DatabaseAdapter {
                 .single();
 
             if (error || !data) {
-                // Try to create the row if it doesn't exist
                 console.log("Supabase: Row missing, attempting to seed...");
+                // Attempt to insert default data. 
+                // NOTE: The table 'auction_state' MUST exist in Supabase for this to work.
                 const { error: insertError } = await this.supabase.from(this.TABLE_NAME).upsert({ id: 1, data: DEFAULT_DB });
-                if (insertError) console.error("Supabase Init Error:", insertError);
+                if (insertError) {
+                    console.error("Supabase Init Error (Table likely missing):", insertError);
+                    return DEFAULT_DB;
+                }
                 return DEFAULT_DB;
             }
             
@@ -290,6 +294,6 @@ class LocalAdapter implements DatabaseAdapter {
 // --- FACTORY ---
 export const getDatabaseAdapter = (): DatabaseAdapter => {
     if (USE_FIREBASE && FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY") return new FirebaseAdapter();
-    if (USE_SUPABASE && SUPABASE_URL !== "YOUR_SUPABASE_URL") return new SupabaseAdapter();
+    if (USE_SUPABASE && SUPABASE_URL && !SUPABASE_URL.includes("YOUR_SUPABASE_URL")) return new SupabaseAdapter();
     return new LocalAdapter();
 };
