@@ -1,0 +1,8 @@
+{
+  "name": "Copy of IPL Auction Command Center",
+  "description": "A real-time, broadcast-style IPL auction system with Admin controls, team bidding interfaces, and AI-powered auctioneer commentary.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
