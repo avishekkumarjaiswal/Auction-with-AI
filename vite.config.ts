@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Polyfill process.env for the Google GenAI SDK and existing code
-    'process.env': process.env
+    // Polyfill process.env to prevent crashes when SDKs access it in the browser
+    'process.env': {}
   }
 });
